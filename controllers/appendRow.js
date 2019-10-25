@@ -1,6 +1,7 @@
 // Append a row to the sheet
 const Storage = require("../models/storage"),
   authConfig = require("../helpers/authentication/configuration"),
+  { enqueueRead, enqueueWrite } = require("../helpers/limiter"),
   googleAuthLib = require("google-auth-library"),
   { google } = require("googleapis"),
   User = require("../models/user");
@@ -32,12 +33,13 @@ module.exports = (req, res, next) => {
     });
 
     // Get the keys
-    sheets.spreadsheets.values
-      .get({
+    enqueueRead(() => {
+      return sheets.spreadsheets.values.get({
         auth: oAuth2Client,
         spreadsheetId: queriedSheetDetails.googleId,
         range: req.params.sheet + "!1:1"
-      })
+      });
+    })
       .then(response => {
         const keyArray = response.data.values[0];
 
@@ -60,14 +62,15 @@ module.exports = (req, res, next) => {
 
         // Now finally append it to the sheet
         const body = { values: allRows };
-        sheets.spreadsheets.values
-          .append({
+        enqueueWrite(() => {
+          return sheets.spreadsheets.values.append({
             auth: oAuth2Client,
             spreadsheetId: queriedSheetDetails.googleId,
             range: req.params.sheet,
             valueInputOption: "RAW",
             resource: body
-          })
+          });
+        })
           .then(response => {
             res.json({ updatedRange: response.data.updates.updatedRange });
           })
