@@ -2,6 +2,7 @@
 const googleAuthLib = require("google-auth-library"),
   { google } = require("googleapis"),
   authConfig = require("../helpers/authentication/configuration"),
+  { enqueueWrite } = require("../helpers/limiter"),
   objectDoesMatch = require("./objectDoesMatch"),
   retrieveSheet = require("./retrieveSheet"),
   User = require("../models/user");
@@ -94,12 +95,13 @@ function afterSheetGoogleId(
   }
 
   // Now query the sheets API
-  sheets.spreadsheets.values
-    .batchUpdate({
+  enqueueWrite(() => {
+    return sheets.spreadsheets.values.batchUpdate({
       auth: oAuth2Client,
       spreadsheetId: sheetDbResult.googleId,
       resource: sheetQueryBody
-    })
+    });
+  })
     .then(result =>
       res.json({ totalUpdatedRows: result.data.totalUpdatedRows || 0 })
     )

@@ -3,6 +3,7 @@ const googleAuthLib = require("google-auth-library"),
   { google } = require("googleapis"),
   objectDoesMatch = require("./objectDoesMatch"),
   authConfig = require("../helpers/authentication/configuration"),
+  { enqueueWrite } = require("../helpers/limiter"),
   retrieveSheet = require("./retrieveSheet"),
   User = require("../models/user");
 
@@ -94,8 +95,9 @@ const afterSheetGoogleId = (
   }
 
   // Make a query to sheets API
-  sheets.spreadsheets.values
-    .batchClear(sheetQueryBody)
+  enqueueWrite(() => {
+    return sheets.spreadsheets.values.batchClear(sheetQueryBody);
+  })
     .then(result => {
       res.json({
         clearedRowsCount: result.data.clearedRanges

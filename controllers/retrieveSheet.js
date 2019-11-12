@@ -1,5 +1,6 @@
 const googleAuthLib = require("google-auth-library"),
   googleOAuthConfig = require("../helpers/authentication/configuration").google,
+  { enqueueRead } = require("../helpers/limiter"),
   { google } = require("googleapis");
 
 // result argument is what db returned on query
@@ -18,12 +19,13 @@ module.exports = (validUser, result, query, rowLimit = Infinity) => {
 
   return new Promise((resolve, reject) => {
     // Get data from spreadsheet
-    sheets.spreadsheets.values
-      .get({
+    enqueueRead(() => {
+      return sheets.spreadsheets.values.get({
         auth: oauth2Client,
         spreadsheetId: result.googleId,
         range: query.sheet
-      })
+      });
+    })
       .then(response => {
         if (response.data.values.length > rowLimit) {
           reject({
