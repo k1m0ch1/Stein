@@ -46,7 +46,7 @@ const enqueueWrite = async (fn) => {
 const wait = (queue, lastTs) => {
   return queue.add(async () => {
     const now = new Date().getTime();
-    const interval = config.seconds * 1000 / requests;
+    const interval = config.seconds * 1000 / config.requests;
     const sinceLast = now - lastTs;
     if (sinceLast < interval) {
       await new Promise(resolve => setTimeout(resolve, interval - sinceLast));
