@@ -9,22 +9,61 @@ const OPERATORS_COMPARISON = [
   '$ne',
 ];
 
-module.exports = (query, obj) => {
-  let match = true;
-  for (let key in query) {
-    const criteria = query[key];
-    if (typeof criteria === 'object') {
-      match = compareCriteria(criteria, obj[key]);
-      if (!match) break;
-    } else {
-      if (obj[key] !== query[key]) {
-        match = false;
-        break;
+const OPERATORS_LOGICAL = [
+  '$and',
+  '$not',
+  '$nor',
+  '$or',
+];
+
+const objectDoesMatch = (query, obj) => {
+  try {
+    let match = false;
+    for (let key in query) {
+      const criteria = query[key];
+      if (OPERATORS_LOGICAL.includes(key)) {
+        if (key === '$not') {
+          match = compareNot(criteria, obj);
+        } else {
+          match = compareLogical(key, criteria, obj);
+        }
+        if (!match) break;
+      } else if (typeof criteria === 'object') {
+        match = compareCriteria(criteria, obj[key]);
+        if (!match) break;
+      } else {
+        match = obj[key] === query[key];
+        if (!match) break;
       }
+    }
+    return match;
+  } catch (err) {
+    return false;
+  }
+};
+
+const compareNot = (query, obj) => {
+  const match = objectDoesMatch(query, obj);
+  return !match;
+}
+
+const compareLogical = (operator, queries, obj) => {
+  let match = false;
+  for (const query of queries) {
+    match = objectDoesMatch(query, obj);
+    if (operator === '$and' && !match) {
+      break;
+    }
+    if (operator === '$or' && match) {
+      break;
+    }
+    if (operator === '$nor') {
+      match = !match;
+      if (!match) break;
     }
   }
   return match;
-};
+}
 
 const compareCriteria = (criteria, test) => {
   let match = true;
@@ -59,3 +98,5 @@ const compareValue = (operator, value, test) => {
   }
   return false;
 }
+
+module.exports = objectDoesMatch;
