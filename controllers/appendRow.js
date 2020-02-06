@@ -13,18 +13,11 @@ module.exports = (req, res, next) => {
       authConfig.google.clientSecret
     );
 
-  // Find spreadsheet in storage, then refresh the token of owner
-  Storage.findById(req.params.id)
-    .then(result => {
-      // Refresh user's access token if necessary
-      User.refreshAccessCode(result.userGoogleId).then(validatedUser => {
-        // Pass the valid user and result to the function which reads and parses the sheets, so as to supply the googleId of the sheet with the appropriate OAuth details.
-        appendRow(validatedUser, result);
-      });
-    })
-    .catch(err => {
-      res.send(err);
-    });
+  User.refreshAccessCode(res.locals.sheetIdDbResult.userGoogleId).then(
+    validatedUser => {
+      appendRow(validatedUser, res.locals.sheetIdDbResult);
+    }
+  );
 
   const appendRow = (validatedUser, queriedSheetDetails) => {
     oAuth2Client.setCredentials({

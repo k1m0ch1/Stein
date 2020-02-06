@@ -12,12 +12,14 @@ module.exports = app => {
     URL structure: /?search={"key":"value", ...}
   */
   app.get("/v1/storages/:id/:sheet", controllers.storage.readSheet);
+  app.get("/v1/sheets/:googleId/:sheet", controllers.storage.readSheet);
 
   /*
     Append a new row
     POST body: [{row object}, ...]
   */
   app.post("/v1/storages/:id/:sheet", controllers.storage.appendRow);
+  app.post("/v1/sheets/:googleId/:sheet", controllers.storage.appendRow);
 
   /*
     Edit row(s)
@@ -28,6 +30,7 @@ module.exports = app => {
     }
   */
   app.put("/v1/storages/:id/:sheet", controllers.storage.editRow);
+  app.put("/v1/sheets/:googleId/:sheet", controllers.storage.editRow);
 
   /*
     Delete row(s)
@@ -37,4 +40,5 @@ module.exports = app => {
     }
   */
   app.delete("/v1/storages/:id/:sheet", controllers.storage.deleteRow);
+  app.delete("/v1/sheets/:googleId/:sheet", controllers.storage.deleteRow);
 };

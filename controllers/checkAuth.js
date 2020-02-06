@@ -1,4 +1,5 @@
 const Storage = require("../models/storage"),
+  User = require("../models/user"),
   auth = require("basic-auth");
 
 const apiNotFoundError = { code: 404, message: "API does not exist" };
@@ -48,6 +49,16 @@ function getStorage(req, res) {
   // If the storage had been already fetched and set by some other middleware, no need to do that again
   if (res.locals.sheetIdDbResult) {
     return Promise.resolve(res.locals.sheetIdDbResult);
+  }
+
+  if (req.params.googleId) {
+    return User.findOne({ email: process.env.STEIN_DEFAULT_EMAIL })
+      .then(result => {
+        return {
+          googleId: req.params.googleId,
+          userGoogleId: result.googleId,
+        };
+      });
   }
 
   return Storage.findById(req.params.id);
