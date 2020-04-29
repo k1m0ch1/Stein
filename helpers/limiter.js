@@ -2,7 +2,7 @@ const Queue = require('promise-queue');
 
 const config = {
   seconds: 100,
-  requests: 500,
+  requests: 100,
 };
 
 const readQueue = new Queue(1, Infinity);
